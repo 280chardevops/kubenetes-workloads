@@ -1,54 +1,125 @@
-# kubenetes-workloads
+---
+theme : "night"
+transition: "slide"
+---
 
+### Juggling Kubernetes Workloads
 
-some of this may be overwhelming, we can anytime sync after this for questions but try to understand the flow of everything
-This could be repetitive for some of us but its always good to brush up with the basics
+Keeping All the Pods in the Air!
 
+--
 
-- k8s and why it exists
-- 10 years and what it means for the industry
-    - ubiqutous
-    - stable
-    - removes all the management overhead
-    - true multi cloud
-    - revolutionized the way we deploy, scale, and manage containerized applications, 
-    - de facto standard for cloud-native development. 
+![](juggler.jpg)
 
-on that note let me start a cluster
+---
 
+###  k8s turns 10
 
-show the workload image
+> what it means for the industry?
 
-we will try to understand all this
+--
 
-- **Pods:**
-  - **Use Case:** ephemeral containers.
-- **Deployments:**
-  - **Use Case:** Stateless applications, rolling updates.
-- **ReplicaSets:**
-  - **Use Case:** Used primarily by Deployments.
-- **StatefulSets:**
-  - **Use Case:** Databases, distributed systems.
-- **DaemonSets:**
-  - **Use Case:** Node-level logging, monitoring, or other system daemons.
-- **Jobs:**
-  - **Use Case:** Batch processing, short-lived tasks.
-- **CronJobs:**
-  - **Use Case:** Periodic tasks, scheduled reports.
+- ubiqutous
+- truly cloud native
+- stable and the de facto standard
+- revolutionized the way we deploy, scale, and manage containerized applications
+- and much more!
 
+---
+
+### Agenda 
+
+:fa-angle-down: :fa-angle-down: ALL OF THESE :fa-angle-down: :fa-angle-down:
+
+--
+
+nope just the workloads :D  
+
+![](workload.png)
+
+---
+
+### Lets start ??
+
+- Some of this may be overwhelming. Just try to understand the flow of everything
+
+- This could be repetitive for some of us but its always good to brush up with the basics
+
+- Starting with a birds eye view of the k8s cluster components
+
+---
+
+Cluster looks like this
+
+![alt text](image.png)
+
+---
 
 # POD
 
-why a pod not a container?
+- the smallest deployable units
+- environment for running container(s). 
 
-k8s is like running your own cloud
-in that context pod is like a vm
-and containers are like processes running in it
+--
 
-containers can talk to each other inside a pod
+### why a pod not a container?
+
+--
+
+  - k8s is like running your own cloud
+  in that context pod is like a vm
+  and containers are like processes running in it
+  - containers can talk to each other inside a pod
+
+--
+
+Example yaml
+
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.14.2 
+    ports:
+    - containerPort: 80
+```
+
+--
+
 - mention side car containers
 - init containers
 - probes
+
+--
+
+### you never run a pod directly
+
+- designed as relatively ephemeral, disposable entities
+
+---
+
+
+### Summary
+
+ workload |  Purpose
+------------ | -------------
+pods | ephemeral containers
+Deployments | Stateless applications, rolling updates
+ReplicaSets | Used primarily by Deployments
+StatefulSets | Databases, distributed systems
+DaemonSets | logging, monitoring, or other daemons
+Jobs | Batch processing, short-lived tasks
+CronJobs | Periodic tasks, scheduled reports
+
+
+
+---
+
+
 
 # Replica set
 
@@ -102,18 +173,4 @@ stateful set includes running pods in a sequence in
 
 
 
-#### **4. Follow along **
 
-## Bootstrap scripts for follow along
-
-[[ if you are on windows, docker desktop can work]]
-
-[[ for mac there will be different set of steps ]]
-
-
-to get more instructions for minikube installation
-
-https://shorturl.at/atsjs
-
-
-## copying images to minikube
