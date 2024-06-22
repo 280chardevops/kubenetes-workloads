@@ -297,6 +297,213 @@ frontend   3         3         0       8s
 
     ```
 
-# Extra
+## Deployments
 
-to get more instructions for minikube installation: https://shorturl.at/atsjs
+- `cd deployments`
+- `kubectl apply -f deployment.yaml`
+
+```
+~$ kubectl apply -f deployment.yaml 
+deployment.apps/nginx-deployment created
+~$ kubectl get deployments
+NAME               READY   UP-TO-DATE   AVAILABLE   AGE
+nginx-deployment   3/3     3            3           9s
+~$ kubectl get pods
+NAME                                READY   STATUS    RESTARTS   AGE
+nginx-deployment-77d8468669-gz482   1/1     Running   0          14s
+nginx-deployment-77d8468669-hn55c   1/1     Running   0          14s
+nginx-deployment-77d8468669-xqb7x   1/1     Running   0          14s
+~$ 
+~$ kubectl get rs
+NAME                          DESIRED   CURRENT   READY   AGE
+nginx-deployment-77d8468669   3         3         3       5m20s
+
+```
+
+- Scaleup a deployment
+
+    - `vim deployment.yaml` and update `replicas: 3` to `replicas: 4`
+    - save the file `:wq`
+    - again apply the yaml `kubectl apply -f deployment.yaml`
+    - You will see a 4th container gets created
+
+    ```
+    ~$ vim deployment.yaml 
+    ~$ kubectl apply -f deployment.yaml 
+    deployment.apps/nginx-deployment configured
+    ~$ kubectl get deployments
+    NAME               READY   UP-TO-DATE   AVAILABLE   AGE
+    nginx-deployment   4/4     4            4           6m49s
+    ~$ kubectl get pods
+    NAME                                READY   STATUS    RESTARTS   AGE
+    nginx-deployment-77d8468669-gz482   1/1     Running   0          6m52s
+    nginx-deployment-77d8468669-hn55c   1/1     Running   0          6m52s
+    nginx-deployment-77d8468669-sd594   1/1     Running   0          6s
+    nginx-deployment-77d8468669-xqb7x   1/1     Running   0          6m52s
+    ~$ kubectl get rs
+    NAME                          DESIRED   CURRENT   READY   AGE
+    nginx-deployment-77d8468669   4         4         4       6m57s
+    ~$ 
+
+    ```
+
+
+
+- Deploying a new image/ Rolling update
+
+    - `vim deployment.yaml` and update `image: nginx:1.14.2` to `image: nginx:latest`
+    - save the file `:wq`
+    - again apply the yaml `kubectl apply -f deployment.yaml`
+    - you will see that a new replicaset was created `nginx-deployment-67857d48f6` and it has the capacity 4, while the prev rs `nginx-deployment-77d8468669` has scaled down to 0
+    - also the pods are different now [they are running the latest image]
+    - check the roll out status with `kubectl rollout status deployment/nginx-deployment`
+    - you can see the rollout history with `kubectl rollout history deployment/nginx-deployment`
+
+    ```
+    ~$ vim deployment.yaml 
+    ~$ kubectl apply -f deployment.yaml 
+    deployment.apps/nginx-deployment configured
+    ~$ kubectl get deployments
+    NAME               READY   UP-TO-DATE   AVAILABLE   AGE
+    nginx-deployment   4/4     4            4           10m
+    ~$ kubectl get rs
+    NAME                          DESIRED   CURRENT   READY   AGE
+    nginx-deployment-67857d48f6   4         4         4       11s
+    nginx-deployment-77d8468669   0         0         0       10m
+    ~$ kubectl get pods
+    NAME                                READY   STATUS    RESTARTS   AGE
+    nginx-deployment-67857d48f6-bfbtt   1/1     Running   0          18s
+    nginx-deployment-67857d48f6-c4nqs   1/1     Running   0          18s
+    nginx-deployment-67857d48f6-fd7wd   1/1     Running   0          19s
+    nginx-deployment-67857d48f6-p9dvx   1/1     Running   0          19s
+    ~$ kubectl rollout status deployment/nginx-deployment
+    deployment "nginx-deployment" successfully rolled out
+    ~$ kubectl rollout history deployment/nginx-deployment
+    deployment.apps/nginx-deployment 
+    REVISION  CHANGE-CAUSE
+    1         <none>
+    2         <none>
+
+
+
+    ```
+
+    - 77d8468669 and 67857d48f6 are hashes of the pod template, the hash changed because the image in the pod template changed
+
+
+
+- Rolling back to prev image
+
+  - `kubectl rollout undo deployment/nginx-deployment --to-revision=1` 
+
+  ```
+    ~$ kubectl rollout undo deployment/nginx-deployment --to-revision=1
+    deployment.apps/nginx-deployment rolled back
+    ~$ kubectl get deployments
+    NAME               READY   UP-TO-DATE   AVAILABLE   AGE
+    nginx-deployment   4/4     4            4           17m
+    ~$ kubectl get rs
+    NAME                          DESIRED   CURRENT   READY   AGE
+    nginx-deployment-67857d48f6   0         0         0       7m50s
+    nginx-deployment-77d8468669   4         4         4       18m
+    ~$ kubectl get pods
+    NAME                                READY   STATUS    RESTARTS   AGE
+    nginx-deployment-77d8468669-b99js   1/1     Running   0          17s
+    nginx-deployment-77d8468669-dr4qv   1/1     Running   0          15s
+    nginx-deployment-77d8468669-tsdwb   1/1     Running   0          15s
+    nginx-deployment-77d8468669-z77fb   1/1     Running   0          17s
+
+  ```
+
+- Delete the deployment
+
+    - `kubectl delete deployment nginx-deployment` will delete the deployment
+    - the rs and pods should also be deleted
+    
+    ```
+    ~$ kubectl delete deployment nginx-deployment
+    deployment.apps "nginx-deployment" deleted
+    :~$ kubectl get rs
+    No resources found in default namespace.
+    :~$ kubectl get pods
+    No resources found in default namespace.
+    :~$ 
+    ```
+
+
+
+## Jobs
+
+- `cd jobs`
+- `kubectl apply -f job.yaml`
+- you will see that the pod goes into completed state after completing its `job`
+
+```
+~$ kubectl apply -f job.yaml 
+job.batch/busybox-job created
+~$ kubectl get pods
+NAME                READY   STATUS              RESTARTS   AGE
+busybox-job-kmzrf   0/1     ContainerCreating   0          3s
+~$ kubectl get pods
+NAME                READY   STATUS              RESTARTS   AGE
+busybox-job-kmzrf   0/1     ContainerCreating   0          5s
+~$ kubectl get pods
+NAME                READY   STATUS      RESTARTS   AGE
+busybox-job-kmzrf   0/1     Completed   0          9s
+~$ 
+```
+
+    - check if the job was completed `kubectl logs busybox-job-kmzrf`
+
+    ```
+    ~$ kubectl logs busybox-job-kmzrf
+    Hello, Kubernetes!
+
+    ```
+
+- delete the job `kubectl delete -f job.yaml`
+
+## CronJobs
+
+- `cd cronjobs`
+- `kubectl apply -f cron.yaml`
+
+```
+~$ kubectl apply -f cron.yaml 
+cronjob.batch/busybox-cronjob created
+
+~$ kubectl get cronjobs
+NAME              SCHEDULE    TIMEZONE   SUSPEND   ACTIVE   LAST SCHEDULE   AGE
+busybox-cronjob   * * * * *   <none>     False     0        13s             50s
+
+# after a minute
+
+~$ kubectl get pods
+NAME                             READY   STATUS      RESTARTS   AGE
+busybox-cronjob-28650578-hwnl8   0/1     Completed   0          48s
+
+## after 2 mins
+
+~$ kubectl get pods
+NAME                             READY   STATUS      RESTARTS   AGE
+busybox-cronjob-28650578-hwnl8   0/1     Completed   0          65s
+busybox-cronjob-28650579-vhdkv   0/1     Completed   0          5s
+
+
+```
+
+    - delete the cronjob  `kubectl delete -f job.yaml`
+
+    ```
+    ~$ kubectl delete cronjob busybox-cronjob
+    cronjob.batch "busybox-cronjob" deleted
+
+    ```
+
+## Daemonsets
+
+TODO
+
+## Statefulsets
+
+TODO

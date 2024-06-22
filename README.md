@@ -52,11 +52,9 @@ nope just the workloads :D
 ### Lets start ??
 
 - Some of this may be overwhelming. Just try to understand the flow of everything
-
 - This could be repetitive for some of us but its always good to brush up with the basics
-
+- We will be focusing on the `why` of each workload
 - Starting with a birds eye view of the k8s cluster components
-
 - And before that lets go through server world
 
 ---
@@ -198,13 +196,23 @@ Cons
 - No Historical Tracking
 
 ![alt text](notime.gif)
+
 ---
 
 ### Deployment
 
+Managing replicasets, thats what I do!
+
 --
 
 ![alt text](image-4.png)
+
+--
+
+- automate the rollout of new versions of an application or its configuration
+- can roll back to a previous version
+- can scale up or down based on the desired number of replicas [HPA]
+-
 
 --
 
@@ -233,13 +241,153 @@ spec:
 
 ```
 
-- probes
+---
+
+There are more workloads!
+
+![alt text](introduce.gif)
+
+---
+
+# jobs
+
+if you have one time tasks instead of constantly running services, eg file processing 
+ - you can run them parallely
+ - pods go in completed state after the task is done
+
+![alt text](job.gif)
+
+--
+
+```
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: busybox-job
+spec:
+  template:
+    metadata:
+      labels:
+        app: busybox
+    spec:
+      containers:
+      - name: busybox
+        image: busybox:latest
+        command: ["sh", "-c", "echo Hello, Kubernetes!"]
+      restartPolicy: Never
+  backoffLimit: 4
+
+```
+
+---
+
+# Cron jobs
+
+Just jobs on a timer
+
+![alt text](time.gif)
+--
+
+--
+
+```
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: busybox-cronjob
+spec:
+  schedule: "* * * * *"
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: busybox
+        spec:
+          containers:
+          - name: busybox
+            image: busybox:latest
+            command: ["sh", "-c", "echo Hello, Kubernetes!"]
+          restartPolicy: Never
+```
+
+---
+
+### Daemon sets
+
+Used for deploying background services across clusters, providing support services for every node
+
+![alt text](daemon.gif)
+
+--
+
+- system operations services, collecting logs, monitoring frameworks like Prometheus, and storage volumes.
+- ensures that all (or some) Nodes run a copy of a Pod. 
+- As nodes are added to the cluster, Pods are added to them.
+- when a node is removed from the cluster, the pod is removed
+
+--
+
+```
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+ name: fluentd
+spec:
+ selector:
+   matchLabels:
+     app: fluentd
+ template:
+   metadata:
+     labels:
+       app: fluentd
+   spec:
+     containers:
+     - name: fluentd
+       image: fluent/fluentd
+       volumeMounts:
+       - name: varlog
+         mountPath: /var/log
+       - name: varlibdockercontainers
+         mountPath: /var/lib/docker/containers
+         readOnly: true
+     terminationGracePeriodSeconds: 30
+     volumes:
+     - name: varlog
+       hostPath:
+         path: /var/log
+     - name: varlibdockercontainers
+       hostPath:
+         path: /var/lib/docker/containers
+
+```
+
+---
+
+# Statefulsets
+
+
+TLDR: when you want to run apps like these in k8s
+
+- MySQL
+- PostgreSQL
+- MongoDB
+- Redis
+- Memcached
+
+---
+
+- A new Pod is created by cloning the previous Pod’s data. 
+- If the previous Pod is in the pending state, then the new Pod will not be created.
+- If you scale down, it will delete the Pod in reverse order, not in random order.
+- Ordered numbers for each Pod
+- pods have sticky identity starting from zero, such as pod0,pod1,pod2, and so forth.
 
 ---
 
 ### Summary
 
- workload |  Purpose
+Workload |  Purpose
 ------------ | -------------
 pods | ephemeral containers
 Deployments | Stateless applications, rolling updates
@@ -250,66 +398,11 @@ Jobs | Batch processing, short-lived tasks
 CronJobs | Periodic tasks, scheduled reports
 
 
-
 ---
 
-
-
-# Replica set
-
-what if i want to create multiple pods, lets say 3
-what if one goes down, who will start it back?
-
-Replica set [mention replication controller was its predecssor]
-
----
-
-# Deployments
-
-it manages replicasets
-rollbacks etc
-
-how? labels
-
----
-
-# jobs
-
-if you have one time tasks instead of constantly running services, eg file processing 
-
-
----
-
-# Cron jobs
-
-
----
-
-# Daemon sets
-
-when we always need 
-
-
----
-
-# Statefulsets
-
-the pods running above were stateless
-ok for apps
-not ok for databases
-
-stateful set includes running pods in a sequence in 
-
----
-
-
----
-
-### Additional resources
-
-  - sayam pathak playlist
-  - kubectl cheatsheet
-
+- Explore volume mounts
+- Explore Services
+- Explore HPA
 
 
 
