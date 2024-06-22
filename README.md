@@ -375,7 +375,7 @@ TLDR: when you want to run apps like these in k8s
 - Redis
 - Memcached
 
----
+--
 
 - A new Pod is created by cloning the previous Pod’s data. 
 - If the previous Pod is in the pending state, then the new Pod will not be created.
@@ -400,9 +400,19 @@ CronJobs | Periodic tasks, scheduled reports
 
 ---
 
+# Demo Time
+
+Find code here: https://github.com/280chardevops/kubernetes-workloads/
+
+---
+
+### What next?
+
+
 - Explore volume mounts
 - Explore Services
 - Explore HPA
+- Explore probes
 
 
 
